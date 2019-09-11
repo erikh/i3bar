@@ -1,4 +1,9 @@
 // Package i3bar provides a Go library for i3bar JSON protocol support.
+//
+// structs and much of the inspiration for this project comes from:
+//
+// https://github.com/davidscholberg/go-i3barjson
+//
 package i3bar
 
 import (
