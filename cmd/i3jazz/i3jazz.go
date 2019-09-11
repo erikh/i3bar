@@ -77,7 +77,8 @@ func cpuUsage() float64 {
 
 	defer func() { lastTime = times.Total() - times.Idle }()
 
-	return float64(times.Total()-times.Idle-lastTime) / float64(time.Duration(runtime.NumCPU())*time.Second) * 100
+	// this duration at the end must be set to the poll delay
+	return float64(times.Total()-times.Idle-lastTime) / float64(time.Duration(runtime.NumCPU())*3*time.Second) * 100
 }
 
 func formatNowTime(fmt string) string {
@@ -86,7 +87,7 @@ func formatNowTime(fmt string) string {
 }
 
 func spotifyTrack() string {
-	out, err := exec.Command("playerctl", "metadata", "-p", "spotify", "-f", "{{ xesam:artist }} - {{ xesam:title }}").Output()
+	out, err := exec.Command("playerctl", "metadata", "-f", "{{ xesam:artist }} - {{ xesam:title }}").Output()
 	if err != nil {
 		return err.Error()
 	}
@@ -125,11 +126,11 @@ func main() {
 				makeBlock(fmt.Sprintf("Net: %.2f%s Rx, %.2f%s Tx", rx2, rxunit, tx2, txunit)),
 				makeBlock(fmt.Sprintf("Memory: %3.2f%s In-Use, %3.2f%s Total", inuse, inuseUnit, totalMem, totalMemUnit)),
 				makeBlock(fmt.Sprintf("Load: %3.2f", loadAverage())),
-				makeBlock(fmt.Sprintf("CPU: %3.2f", cpuUsage())),
+				makeBlock(fmt.Sprintf("CPU: %3.2f%%", cpuUsage())),
 				makeBlock(spotifyTrack()),
 				makeBlock(formatNowTime("%Y-%m-%d %H:%M")),
 			}
-			time.Sleep(time.Second)
+			time.Sleep(3 * time.Second)
 		}
 	}()
 	if err := i3bar.Encode(os.Stdout, &i3bar.Header{Version: 1}, ch); err != nil {
