@@ -98,15 +98,32 @@ func makeBlock(text string) *i3bar.Block {
 	return &i3bar.Block{FullText: text, Color: "#888888", Separator: true}
 }
 
+func nearestUnit(base float64) (float64, string) {
+	near := base
+	for _, unit := range []string{"KB", "MB", "GB", "TB"} {
+		near /= 1024
+		if near < 1024 {
+			return near, unit
+		}
+	}
+
+	return near, ""
+}
+
 func main() {
 	ch := make(chan i3bar.StatusLine)
 	go func() {
 		for {
 			avail, total := memoryUsage()
+			inuse, inuseUnit := nearestUnit(float64(total - avail))
+			totalMem, totalMemUnit := nearestUnit(float64(total))
 			rx, tx := netActivity("wlp7s0")
+			rx2, rxunit := nearestUnit(float64(rx))
+			tx2, txunit := nearestUnit(float64(tx))
+
 			ch <- i3bar.StatusLine{
-				makeBlock(fmt.Sprintf("Net: %3.2fK Rx, %3.2fK Tx", float64(rx)/1024, float64(tx)/1024)),
-				makeBlock(fmt.Sprintf("Memory: %3.2f In-Use, %3.2f Total", float64(total-avail)/1024/1024/1024, float64(total)/1024/1024/1024)),
+				makeBlock(fmt.Sprintf("Net: %.2f%s Rx, %.2f%s Tx", rx2, rxunit, tx2, txunit)),
+				makeBlock(fmt.Sprintf("Memory: %3.2f%s In-Use, %3.2f%s Total", inuse, inuseUnit, totalMem, totalMemUnit)),
 				makeBlock(fmt.Sprintf("Load: %3.2f", loadAverage())),
 				makeBlock(fmt.Sprintf("CPU: %3.2f", cpuUsage())),
 				makeBlock(spotifyTrack()),
