@@ -1,6 +1,11 @@
 // Package i3bar provides a Go library for i3bar JSON protocol support.
 package i3bar
 
+import (
+	"encoding/json"
+	"io"
+)
+
 // Header represents the header of an i3bar message.
 type Header struct {
 	Version     int  `json:"version"`
@@ -34,4 +39,41 @@ type Click struct {
 	X        int    `json:"x"`
 	Y        int    `json:"y"`
 	Button   int    `json:"button"`
+}
+
+// Encode encodes the structs to the writer as they arrive through the channel. Close the channel to stop writing.
+func Encode(w io.Writer, header *Header, slChan chan StatusLine) error {
+	content, err := json.Marshal(header)
+	if err != nil {
+		return err
+	}
+	if _, err := w.Write(content); err != nil {
+		return err
+	}
+
+	if _, err := w.Write([]byte("[")); err != nil {
+		return err
+	}
+
+	first := true
+
+	for sl := range slChan {
+		if !first {
+			if _, err := w.Write([]byte(",")); err != nil {
+				return err
+			}
+		} else {
+			first = false
+		}
+
+		if err := json.NewEncoder(w).Encode(sl); err != nil {
+			return err
+		}
+	}
+
+	if _, err := w.Write([]byte("]")); err != nil {
+		return err
+	}
+
+	return nil
 }
