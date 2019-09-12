@@ -32,6 +32,12 @@ type Block struct {
 	Separator           bool   `json:"separator"`
 	SeparatorBlockWidth int    `json:"separator_block_width,omitempty"`
 	Markup              string `json:"markup,omitempty"`
+	Background          string `json:"background,omitempty"`
+	Border              string `json:"border,omitempty"`
+	BorderTop           string `json:"border_top,omitempty"`
+	BorderRight         string `json:"border_right,omitempty"`
+	BorderLeft          string `json:"border_left,omitempty"`
+	BorderBottom        string `json:"border_bottom,omitempty"`
 }
 
 // StatusLine represents a full i3bar status line.
