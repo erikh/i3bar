@@ -152,7 +152,7 @@ func main() {
 				makeBlock(fmt.Sprintf("CPU: %3.2f%%", cpuUsage())),
 				makeBlock(fmt.Sprintf("Volume: %3.1f%%", volume())),
 				makeBlock(spotifyTrack()),
-				makeBlock(formatNowTime("%Y-%m-%d %H:%M")),
+				makeBlock(formatNowTime("%a %Y-%m-%d %H:%M")),
 			}
 			time.Sleep(3 * time.Second)
 		}
