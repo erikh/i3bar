@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strconv"
 	"strings"
@@ -17,6 +18,28 @@ import (
 )
 
 var lastRxBytes, lastTxBytes uint64
+
+func volume() float64 {
+	out, err := exec.Command("amixer", "-D", "pulse", "sget", "Master").Output()
+	if err != nil {
+		return 0.0
+	}
+
+	for _, line := range strings.Split(string(out), "\n") {
+		line = strings.TrimSpace(line)
+		if strings.HasPrefix(line, "Front Left:") {
+			parts := regexp.MustCompile(`\s+`).Split(line, -1)
+			vol, err := strconv.ParseFloat(parts[3], 64)
+			if err != nil {
+				return 0.0
+			}
+
+			return (vol / 65535.0) * 100
+		}
+	}
+
+	return 0.0
+}
 
 func netActivity(dev string) (uint64, uint64) {
 	link, err := netlink.LinkByName(dev)
@@ -127,6 +150,7 @@ func main() {
 				makeBlock(fmt.Sprintf("Memory: %3.2f%s In-Use, %3.2f%s Total", inuse, inuseUnit, totalMem, totalMemUnit)),
 				makeBlock(fmt.Sprintf("Load: %3.2f", loadAverage())),
 				makeBlock(fmt.Sprintf("CPU: %3.2f%%", cpuUsage())),
+				makeBlock(fmt.Sprintf("Volume: %3.1f%%", volume())),
 				makeBlock(spotifyTrack()),
 				makeBlock(formatNowTime("%Y-%m-%d %H:%M")),
 			}
