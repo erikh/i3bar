@@ -141,9 +141,9 @@ func main() {
 			avail, total := memoryUsage()
 			inuse, inuseUnit := nearestUnit(float64(total - avail))
 			totalMem, totalMemUnit := nearestUnit(float64(total))
-			rx, tx := netActivity("wlp7s0")
-			rx2, rxunit := nearestUnit(float64(rx))
-			tx2, txunit := nearestUnit(float64(tx))
+			rx, tx := netActivity("enp6s0")
+			rx2, rxunit := nearestUnit(float64(rx) / 3)
+			tx2, txunit := nearestUnit(float64(tx) / 3)
 
 			ch <- i3bar.StatusLine{
 				makeBlock(fmt.Sprintf("Net: %.2f%s Rx, %.2f%s Tx", rx2, rxunit, tx2, txunit)),
