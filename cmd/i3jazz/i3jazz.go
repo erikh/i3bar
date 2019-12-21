@@ -1,12 +1,14 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"regexp"
 	"runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -18,6 +20,28 @@ import (
 )
 
 var lastRxBytes, lastTxBytes uint64
+
+func task() string {
+	out, err := exec.Command("task", "export").Output()
+	if err != nil {
+		return ""
+	}
+
+	m := []map[string]interface{}{}
+
+	if err := json.Unmarshal(out, &m); err != nil {
+		return ""
+	}
+
+	sort.Slice(m, func(i, j int) bool {
+		if m[i]["status"] == "pending" {
+			return m[i]["urgency"].(float64) < m[j]["urgency"].(float64) &&
+				m[i]["due"] != nil && m[j]["due"] != nil && m[i]["due"].(string) > m[j]["due"].(string)
+		}
+		return true
+	})
+	return m[len(m)-1]["description"].(string)
+}
 
 func volume() float64 {
 	out, err := exec.Command("amixer", "-D", "pulse", "sget", "Master").Output()
@@ -141,11 +165,13 @@ func main() {
 			avail, total := memoryUsage()
 			inuse, inuseUnit := nearestUnit(float64(total - avail))
 			totalMem, totalMemUnit := nearestUnit(float64(total))
-			rx, tx := netActivity("enp6s0")
+			rx, tx := netActivity("eno1")
 			rx2, rxunit := nearestUnit(float64(rx) / 3)
 			tx2, txunit := nearestUnit(float64(tx) / 3)
+			taskDescription := task()
 
 			ch <- i3bar.StatusLine{
+				makeBlock(fmt.Sprintf("Most urgent task: %s", taskDescription)),
 				makeBlock(fmt.Sprintf("Net: %.2f%s Rx, %.2f%s Tx", rx2, rxunit, tx2, txunit)),
 				makeBlock(fmt.Sprintf("Memory: %3.2f%s In-Use, %3.2f%s Total", inuse, inuseUnit, totalMem, totalMemUnit)),
 				makeBlock(fmt.Sprintf("Load: %3.2f", loadAverage())),
