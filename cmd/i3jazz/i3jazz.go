@@ -34,13 +34,23 @@ func task() string {
 	}
 
 	sort.Slice(m, func(i, j int) bool {
-		if m[i]["status"] == "pending" {
+		if m[j]["status"] != "completed" && m[j]["status"] != "deleted" {
+			if m[i]["due"] == nil && m[j]["due"] != nil {
+				return false
+			}
+			if m[i]["due"] != nil && m[j]["due"] == nil {
+				return true
+			}
+			if m[i]["due"] == nil && m[j]["due"] == nil {
+				return false
+			}
+
 			return m[i]["urgency"].(float64) < m[j]["urgency"].(float64) &&
-				m[i]["due"] != nil && m[j]["due"] != nil && m[i]["due"].(string) > m[j]["due"].(string)
+				m[i]["due"].(string) < m[j]["due"].(string)
 		}
 		return true
 	})
-	return m[len(m)-1]["description"].(string)
+	return m[0]["description"].(string)
 }
 
 func volume() float64 {
@@ -171,13 +181,13 @@ func main() {
 			taskDescription := task()
 
 			ch <- i3bar.StatusLine{
-				makeBlock(fmt.Sprintf("Most urgent task: %s", taskDescription)),
 				makeBlock(fmt.Sprintf("Net: %.2f%s Rx, %.2f%s Tx", rx2, rxunit, tx2, txunit)),
 				makeBlock(fmt.Sprintf("Memory: %3.2f%s In-Use, %3.2f%s Total", inuse, inuseUnit, totalMem, totalMemUnit)),
 				makeBlock(fmt.Sprintf("Load: %3.2f", loadAverage())),
 				makeBlock(fmt.Sprintf("CPU: %3.2f%%", cpuUsage())),
 				makeBlock(fmt.Sprintf("Volume: %3.1f%%", volume())),
 				makeBlock(spotifyTrack()),
+				makeBlock(fmt.Sprintf("Most urgent task: %s", taskDescription)),
 				makeBlock(formatNowTime("%a %Y-%m-%d %H:%M")),
 			}
 			time.Sleep(3 * time.Second)
