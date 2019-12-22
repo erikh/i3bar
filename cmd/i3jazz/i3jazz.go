@@ -35,22 +35,11 @@ func task() string {
 
 	sort.Slice(m, func(i, j int) bool {
 		if m[j]["status"] != "completed" && m[j]["status"] != "deleted" {
-			if m[i]["due"] == nil && m[j]["due"] != nil {
-				return false
-			}
-			if m[i]["due"] != nil && m[j]["due"] == nil {
-				return true
-			}
-			if m[i]["due"] == nil && m[j]["due"] == nil {
-				return false
-			}
-
-			return m[i]["urgency"].(float64) < m[j]["urgency"].(float64) &&
-				m[i]["due"].(string) < m[j]["due"].(string)
+			return m[i]["urgency"].(float64) < m[j]["urgency"].(float64)
 		}
-		return true
+		return false
 	})
-	return m[0]["description"].(string)
+	return m[len(m)-1]["description"].(string)
 }
 
 func volume() float64 {
