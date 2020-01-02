@@ -33,13 +33,31 @@ func task() string {
 		return ""
 	}
 
-	sort.Slice(m, func(i, j int) bool {
-		if m[j]["status"] != "completed" && m[j]["status"] != "deleted" {
-			return m[i]["urgency"].(float64) < m[j]["urgency"].(float64)
+	m2 := []map[string]interface{}{}
+
+	for _, mp := range m {
+		if mp["status"] == "completed" || mp["status"] == "deleted" {
+			continue
 		}
-		return false
+		if ary, ok := mp["tags"].([]interface{}); ok {
+			cpy := true
+			for _, item := range ary {
+				if item.(string) == "personal" {
+					cpy = false
+					break
+				}
+			}
+			if !cpy {
+				continue
+			}
+		}
+		m2 = append(m2, mp)
+	}
+
+	sort.Slice(m2, func(i, j int) bool {
+		return m2[i]["urgency"].(float64) < m2[j]["urgency"].(float64)
 	})
-	return m[len(m)-1]["description"].(string)
+	return m2[len(m2)-1]["description"].(string)
 }
 
 func volume() float64 {
